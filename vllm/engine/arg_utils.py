@@ -531,14 +531,14 @@ class EngineArgs:
         ObservabilityConfig.enable_logging_iteration_details
     )
     enable_mm_processor_stats: bool = ObservabilityConfig.enable_mm_processor_stats
-    histogram_buckets_ttft: list[float] | None = (
-        ObservabilityConfig.histogram_buckets_ttft
+    histogram_buckets_ttft: list[float] | None = get_field(
+        ObservabilityConfig, "histogram_buckets_ttft"
     )
-    histogram_buckets_itl: list[float] | None = (
-        ObservabilityConfig.histogram_buckets_itl
+    histogram_buckets_itl: list[float] | None = get_field(
+        ObservabilityConfig, "histogram_buckets_itl"
     )
-    histogram_buckets_request_latency: list[float] | None = (
-        ObservabilityConfig.histogram_buckets_request_latency
+    histogram_buckets_request_latency: list[float] | None = get_field(
+        ObservabilityConfig, "histogram_buckets_request_latency"
     )
     scheduling_policy: SchedulerPolicy = SchedulerConfig.policy
     scheduler_cls: str | type[object] | None = SchedulerConfig.scheduler_cls
@@ -1113,7 +1113,7 @@ class EngineArgs:
             "--histogram-buckets-ttft",
             nargs="+",
             type=float,
-            default=None,
+            default=observability_kwargs["histogram_buckets_ttft"]["default"],
             help="Custom Prometheus histogram buckets for time-to-first-token "
             "(TTFT) metrics. Specify as space-separated float boundaries "
             "in seconds. Example: --histogram-buckets-ttft 0.01 0.05 0.1 "
@@ -1123,7 +1123,7 @@ class EngineArgs:
             "--histogram-buckets-itl",
             nargs="+",
             type=float,
-            default=None,
+            default=observability_kwargs["histogram_buckets_itl"]["default"],
             help="Custom Prometheus histogram buckets for inter-token latency "
             "(ITL) metrics. Specify as space-separated float boundaries "
             "in seconds. Example: --histogram-buckets-itl 0.01 0.05 0.1 "
@@ -1133,7 +1133,9 @@ class EngineArgs:
             "--histogram-buckets-request-latency",
             nargs="+",
             type=float,
-            default=None,
+            default=observability_kwargs["histogram_buckets_request_latency"][
+                "default"
+            ],
             help="Custom Prometheus histogram buckets for request latency "
             "metrics (e2e, queue, inference, prefill, decode). Specify as "
             "space-separated float boundaries in seconds. Example: "

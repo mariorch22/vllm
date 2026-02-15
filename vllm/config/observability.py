@@ -7,6 +7,7 @@ from typing import Any, Literal, cast
 from packaging.version import parse
 from pydantic import Field, field_validator, model_validator
 
+import vllm.envs as envs
 from vllm import version
 from vllm.config.utils import config
 from vllm.utils.hashing import safe_hash
@@ -76,17 +77,23 @@ class ObservabilityConfig:
     This includes number of context/generation requests and tokens
     and the elapsed cpu time for the iteration."""
 
-    histogram_buckets_ttft: list[float] | None = None
+    histogram_buckets_ttft: list[float] | None = Field(
+        default_factory=lambda: envs.VLLM_HISTOGRAM_BUCKETS_TTFT
+    )
     """Custom Prometheus histogram buckets for time-to-first-token (TTFT)
     metrics. Specify as a list of float boundaries in seconds.
     If None, uses the default buckets."""
 
-    histogram_buckets_itl: list[float] | None = None
+    histogram_buckets_itl: list[float] | None = Field(
+        default_factory=lambda: envs.VLLM_HISTOGRAM_BUCKETS_ITL
+    )
     """Custom Prometheus histogram buckets for inter-token latency (ITL)
     metrics. Specify as a list of float boundaries in seconds.
     If None, uses the default buckets."""
 
-    histogram_buckets_request_latency: list[float] | None = None
+    histogram_buckets_request_latency: list[float] | None = Field(
+        default_factory=lambda: envs.VLLM_HISTOGRAM_BUCKETS_REQUEST_LATENCY
+    )
     """Custom Prometheus histogram buckets for request latency metrics
     (e2e, queue, inference, prefill, decode). Specify as a list of float
     boundaries in seconds. If None, uses the default buckets."""

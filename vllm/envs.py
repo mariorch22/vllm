@@ -230,6 +230,9 @@ if TYPE_CHECKING:
     VLLM_USE_V2_MODEL_RUNNER: bool = False
     VLLM_LOG_MODEL_INSPECTION: bool = False
     VLLM_DEBUG_MFU_METRICS: bool = False
+    VLLM_HISTOGRAM_BUCKETS_TTFT: list[float] | None = None
+    VLLM_HISTOGRAM_BUCKETS_ITL: list[float] | None = None
+    VLLM_HISTOGRAM_BUCKETS_REQUEST_LATENCY: list[float] | None = None
     VLLM_WEIGHT_OFFLOADING_DISABLE_PIN_MEMORY: bool = False
     VLLM_WEIGHT_OFFLOADING_DISABLE_UVA: bool = False
     VLLM_DISABLE_LOG_LOGO: bool = False
@@ -400,6 +403,28 @@ def env_set_with_choices(
         return set(env_list_with_choices(env_name, default, choices, case_sensitive)())
 
     return _get_validated_env_set
+
+
+def env_list_of_floats(env_name: str) -> Callable[[], list[float] | None]:
+    """Parse a comma-separated float list from an environment variable."""
+
+    def _get_float_list() -> list[float] | None:
+        value = os.getenv(env_name)
+        if value is None:
+            return None
+
+        values = [v.strip() for v in value.split(",") if v.strip()]
+        if not values:
+            return None
+
+        try:
+            return [float(v) for v in values]
+        except ValueError as e:
+            raise ValueError(
+                f"Invalid value for {env_name}: expected comma-separated floats."
+            ) from e
+
+    return _get_float_list
 
 
 def get_vllm_port() -> int | None:
@@ -1543,6 +1568,14 @@ environment_variables: dict[str, Callable[[], Any]] = {
     # Debug logging for --enable-mfu-metrics
     "VLLM_DEBUG_MFU_METRICS": lambda: bool(
         int(os.getenv("VLLM_DEBUG_MFU_METRICS", "0"))
+    ),
+    # Optional comma-separated custom TTFT histogram buckets in seconds.
+    "VLLM_HISTOGRAM_BUCKETS_TTFT": env_list_of_floats("VLLM_HISTOGRAM_BUCKETS_TTFT"),
+    # Optional comma-separated custom ITL histogram buckets in seconds.
+    "VLLM_HISTOGRAM_BUCKETS_ITL": env_list_of_floats("VLLM_HISTOGRAM_BUCKETS_ITL"),
+    # Optional comma-separated custom request-latency histogram buckets in seconds.
+    "VLLM_HISTOGRAM_BUCKETS_REQUEST_LATENCY": env_list_of_floats(
+        "VLLM_HISTOGRAM_BUCKETS_REQUEST_LATENCY"
     ),
     # Disable using pytorch's pin memory for CPU offloading.
     "VLLM_WEIGHT_OFFLOADING_DISABLE_PIN_MEMORY": lambda: bool(
