@@ -165,6 +165,23 @@ class ObservabilityConfig:
             value = cast(list[DetailedTraceModules], value[0].split(","))
         return value
 
+    @field_validator(
+        "histogram_buckets_ttft",
+        "histogram_buckets_itl",
+        "histogram_buckets_request_latency",
+    )
+    @classmethod
+    def _validate_histogram_buckets(
+        cls, value: list[float] | None
+    ) -> list[float] | None:
+        if value is None:
+            return None
+        if any(bucket <= 0 for bucket in value):
+            raise ValueError("Histogram buckets must be > 0.")
+        if any(curr <= prev for prev, curr in zip(value, value[1:])):
+            raise ValueError("Histogram buckets must be strictly increasing.")
+        return value
+
     @model_validator(mode="after")
     def _validate_tracing_config(self):
         if self.collect_detailed_traces and not self.otlp_traces_endpoint:
